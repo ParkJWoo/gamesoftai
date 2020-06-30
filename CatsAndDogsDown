@@ -1,0 +1,48 @@
+from urllib.request import Request,urlopen
+from os.path import exists, join
+from os import mkdir
+from tqdm import tqdm
+import argparse
+
+URL_CAT_LIST = "http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n02123159"
+URL_DOG_LIST = "http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n02111277"
+
+def myRequest(url):
+	requestItem = Request(url)
+	response = urlopen(requestItem)
+	return response.read()
+
+
+def getList(url):
+	"""CAT_URL_LIST = myRequest(url).decode("utf-8").split('\r\n') """
+	DOG_URL_LIST = myRequest(url).decode("utf-8").split('\r\n')
+	return DOG_URL_LIST
+
+def getImageItemFromURLList(urlList, folder):
+	baseFolder = "Data/"
+	if not exists(baseFolder):
+		mkdir(baseFolder)
+
+	folder = join(baseFolder, folder)
+
+	if not exists(folder):
+		mkdir(folder)
+
+	indicator = tqdm(range(len(urlList)))
+
+	for url in urlList:
+		try:
+			content = myRequest(url)
+			with open(join(folder, str(indicator.n)+".jpg"),"wb") as imageFile:
+				imageFile.write(content)
+			indicator.update()
+
+		except Exception as reason:
+			print("reason -> "+str(reason))
+			continue
+
+
+if __name__ == '__main__':
+	urlList = getList(URL_DOG_LIST)
+
+	getImageItemFromURLList(urlList, "Dogs")
